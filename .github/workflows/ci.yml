@@ -1,0 +1,28 @@
+name: CI
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      # Build only the SDK crate. utxorpc-tests is a separate workspace member
+      # (live-server integration suite, currently stale vs the spec) and is
+      # excluded from CI.
+      - run: cargo build -p utxorpc --all-targets
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      # Only the SDK crate's tests run here; utxorpc-tests is excluded (see build).
+      - run: cargo test -p utxorpc
